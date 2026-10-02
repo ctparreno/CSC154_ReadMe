@@ -2,6 +2,18 @@ const searchForm = document.querySelector(".search-form");
 const searchInput = document.querySelector("#searchInput");
 const resultsContainer = document.querySelector("#results");
 
+resultsContainer.addEventListener("click", (event) => {
+    const button = event.target.closest(".book-cover-button");
+
+    if (!button) {
+        return;
+    }
+
+    const archiveId = button.dataset.archiveId;
+
+    console.log("Selected Internet Archive ID:", archiveId);
+});
+
 searchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
