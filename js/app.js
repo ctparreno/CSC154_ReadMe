@@ -11,7 +11,8 @@ resultsContainer.addEventListener("click", (event) => {
 
     const archiveId = button.dataset.archiveId;
 
-    console.log("Selected Internet Archive ID:", archiveId);
+    window.location.href =
+        `reader.html?id=${encodeURIComponent(archiveId)}`;
 });
 
 searchForm.addEventListener("submit", async (event) => {
