@@ -8,10 +8,11 @@ searchForm.addEventListener("submit", async (event) => {
     const query = searchInput.value.trim();
 
     if (!query) {
+        showStatus("Enter a title, author, or subject to search.");
         return;
     }
 
-    resultsContainer.innerHTML = "<p>Searching...</p>";
+    showStatus("Searching...");
 
     try {
         const response = await fetch(
@@ -24,12 +25,11 @@ searchForm.addEventListener("submit", async (event) => {
 
         const data = await response.json();
 
-        displayResults(data.docs.slice(0, 10));
+        displayResults(data.docs.slice(0, 9));
     } catch (error) {
         console.error("Error searching Open Library:", error);
 
-        resultsContainer.innerHTML =
-            "<p>Something went wrong while searching.</p>";
+        showStatus("Something went wrong while searching.");
     }
 });
 
@@ -37,41 +37,60 @@ function displayResults(books) {
     resultsContainer.innerHTML = "";
 
     if (books.length === 0) {
-        resultsContainer.innerHTML = "<p>No books found.</p>";
+        showStatus("No books found.");
         return;
     }
 
     books.forEach((book) => {
-        const bookElement = document.createElement("div");
+        const bookCard = document.createElement("article");
+        bookCard.classList.add("book-card");
 
         const title = book.title || "Unknown title";
+
         const author = book.author_name
             ? book.author_name.join(", ")
             : "Unknown author";
 
-        const year = book.first_publish_year || "Unknown year";
+        const cover = book.cover_i
+            ? `
+                <img
+                    src="https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg"
+                    alt="Cover of ${escapeHtml(title)}"
+                    loading="lazy"
+                >
+            `
+            : `
+                <div class="book-cover-placeholder">
+                    No cover available
+                </div>
+            `;
 
-        let coverImage = "";
+        bookCard.innerHTML = `
+            <div class="book-cover-frame">
+                ${cover}
+            </div>
 
-        if (book.cover_i) {
-            coverImage = `
-        <img
-          src="https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg"
-          alt="Cover of ${title}"
-        >
-      `;
-        }
+            <div class="book-info">
+                <h2 class="book-title">${escapeHtml(title)}</h2>
+                <p class="book-author">${escapeHtml(author)}</p>
+            </div>
+        `;
 
-        bookElement.innerHTML = `
-      ${coverImage}
-
-      <h2>${title}</h2>
-
-      <p>${author}</p>
-
-      <p>${year}</p>
-    `;
-
-        resultsContainer.appendChild(bookElement);
+        resultsContainer.appendChild(bookCard);
     });
+}
+
+function showStatus(message) {
+    resultsContainer.innerHTML = `
+        <p class="status-message">${escapeHtml(message)}</p>
+    `;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }

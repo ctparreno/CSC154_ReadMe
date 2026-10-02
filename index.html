@@ -7,121 +7,16 @@
 
     <title>ReadMe</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #f7f7f5;
-            color: #222;
-            min-height: 100vh;
-        }
-
-        /* Header */
-        header {
-            width: 100%;
-            padding: 24px 40px;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        /* Main landing area */
-        main {
-            min-height: calc(100vh - 80px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-
-        .hero {
-            width: 100%;
-            max-width: 700px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 32px;
-            font-weight: 600;
-        }
-
-        /* Search */
-        .search-form {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .search-form input {
-            flex: 1;
-            padding: 16px 18px;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-            background-color: white;
-        }
-
-        .search-form input:focus {
-            border-color: #555;
-        }
-
-        .search-form button {
-            padding: 16px 24px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            background-color: #222;
-            color: white;
-            cursor: pointer;
-        }
-
-        .search-form button:hover {
-            background-color: #444;
-        }
-
-        .subtitle {
-            margin-top: 18px;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        /* Mobile */
-        @media (max-width: 600px) {
-            header {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            .search-form {
-                flex-direction: column;
-            }
-
-            .search-form button {
-                width: 100%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
 
-    <header>
-        <div class="logo">ReadMe</div>
+    <header class="site-header">
+        <div class="site-brand">ReadMe</div>
     </header>
 
-    <main>
+    <main class="page-shell">
         <section class="hero">
 
             <h1>Find something to read.</h1>
@@ -139,7 +34,7 @@
                 Search freely available books and read them directly in your browser.
             </p>
 
-            <section id="results"></section>
+            <section id="results" class="results-grid" aria-live="polite"></section>
 
         </section>
     </main>
