@@ -15,8 +15,10 @@ searchForm.addEventListener("submit", async (event) => {
     showStatus("Searching...");
 
     try {
+        const searchQuery = `${query} AND ebook_access:public`;
+
         const response = await fetch(
-            `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`
+            `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&fields=key,title,author_name,cover_i,ia,ebook_access&limit=9`
         );
 
         if (!response.ok) {
@@ -25,7 +27,15 @@ searchForm.addEventListener("submit", async (event) => {
 
         const data = await response.json();
 
-        displayResults(data.docs.slice(0, 9));
+        const readableBooks = data.docs.filter((book) => {
+            return (
+                book.ebook_access === "public" &&
+                Array.isArray(book.ia) &&
+                book.ia.length > 0
+            );
+        });
+
+        displayResults(readableBooks);
     } catch (error) {
         console.error("Error searching Open Library:", error);
 
@@ -37,7 +47,7 @@ function displayResults(books) {
     resultsContainer.innerHTML = "";
 
     if (books.length === 0) {
-        showStatus("No books found.");
+        showStatus("No freely readable books found.");
         return;
     }
 
@@ -50,6 +60,8 @@ function displayResults(books) {
         const author = book.author_name
             ? book.author_name.join(", ")
             : "Unknown author";
+
+        const archiveId = book.ia[0];
 
         const cover = book.cover_i
             ? `
@@ -66,9 +78,16 @@ function displayResults(books) {
             `;
 
         bookCard.innerHTML = `
-            <div class="book-cover-frame">
-                ${cover}
-            </div>
+            <button
+                class="book-cover-button"
+                type="button"
+                data-archive-id="${escapeHtml(archiveId)}"
+                aria-label="Read ${escapeHtml(title)}"
+            >
+                <div class="book-cover-frame">
+                    ${cover}
+                </div>
+            </button>
 
             <div class="book-info">
                 <h2 class="book-title">${escapeHtml(title)}</h2>
