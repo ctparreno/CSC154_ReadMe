@@ -48,37 +48,33 @@ async function loadBook(identifier) {
         const epubFile = findEpub(files);
         const pdfFile = findPdf(files);
 
-        /*
-            Try EPUB first because it gives us
-            the cleanest custom reader experience.
-        */
         if (epubFile) {
-            const epubWorked = await tryEpub(identifier, epubFile.name);
+            const epubWorked = await tryEpub(
+                identifier,
+                epubFile.name
+            );
 
             if (epubWorked) {
                 return;
             }
         }
 
-        /*
-            If EPUB is unavailable or fails,
-            try PDF.
-        */
         if (pdfFile) {
-            const pdfWorked = await tryPdf(identifier, pdfFile.name);
+            const pdfWorked = await tryPdf(
+                identifier,
+                pdfFile.name
+            );
 
             if (pdfWorked) {
                 return;
             }
         }
 
-        /*
-            Final fallback: Internet Archive reader.
-        */
         loadArchiveReader(identifier);
 
     } catch (error) {
         console.error("Reader error:", error);
+
         loadArchiveReader(identifier);
     }
 }
@@ -129,10 +125,12 @@ async function tryEpub(identifier, filename) {
     readerStatus.textContent = "Opening EPUB...";
 
     const epubUrl =
-        `https://archive.org/download/${encodeURIComponent(identifier)}/${encodeURIComponent(filename)}`;
+        `https://archive.org/cors/${encodeURIComponent(identifier)}/${encodeURIComponent(filename)}`;
 
     try {
         book = ePub(epubUrl);
+
+        await book.ready;
 
         rendition = book.renderTo(
             epubViewer,
@@ -145,7 +143,6 @@ async function tryEpub(identifier, filename) {
         await rendition.display();
 
         epubReader.classList.remove("hidden");
-
         readerStatus.textContent = "EPUB";
 
         previousPageButton.onclick = () => {
@@ -231,11 +228,6 @@ async function tryPdf(identifier, filename) {
 
         pdfViewer.src = pdfUrl;
 
-        /*
-            Some browsers do not reliably fire iframe
-            errors for failed PDF loads, so give it a
-            short timeout and fall back if nothing happens.
-        */
         setTimeout(() => {
             if (settled) {
                 return;
@@ -285,6 +277,8 @@ function resetReader() {
 
     pdfViewer.src = "";
     archiveViewer.src = "";
+
+    epubViewer.innerHTML = "";
 }
 
 function showError(message) {
