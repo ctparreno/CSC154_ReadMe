@@ -4,8 +4,9 @@ const resultsContainer = document.querySelector("#results");
 
 
 /*
-    Open a selected book while preserving
-    the user's current search query.
+    Open a selected book while preserving:
+    - the current search query
+    - the current scroll position
 */
 
 resultsContainer.addEventListener("click", (event) => {
@@ -17,9 +18,12 @@ resultsContainer.addEventListener("click", (event) => {
 
     const archiveId = button.dataset.archiveId;
     const query = searchInput.value.trim();
+    const scrollPosition = Math.round(window.scrollY);
 
     const readerUrl =
-        `reader.html?id=${encodeURIComponent(archiveId)}&q=${encodeURIComponent(query)}`;
+        `reader.html?id=${encodeURIComponent(archiveId)}` +
+        `&q=${encodeURIComponent(query)}` +
+        `&scroll=${scrollPosition}`;
 
     window.location.href = readerUrl;
 });
@@ -47,19 +51,33 @@ searchForm.addEventListener("submit", (event) => {
     Perform Open Library search
 */
 
-async function searchBooks(query) {
+async function searchBooks(query, restoreScroll = 0) {
     showStatus("Searching...");
 
     /*
         Store the search in the page URL.
 
-        This means index.html?q=dune can restore
-        the search after leaving the reader.
+        Example:
+        index.html?q=dune
     */
 
     const pageUrl = new URL(window.location.href);
 
     pageUrl.searchParams.set("q", query);
+
+    /*
+        Remove an old scroll value when the user
+        starts a fresh search manually.
+    */
+
+    if (restoreScroll > 0) {
+        pageUrl.searchParams.set(
+            "scroll",
+            String(restoreScroll)
+        );
+    } else {
+        pageUrl.searchParams.delete("scroll");
+    }
 
     window.history.replaceState(
         {},
@@ -91,6 +109,20 @@ async function searchBooks(query) {
 
         displayResults(readableBooks);
 
+        /*
+            Restore the previous scroll position
+            after the results are back in the DOM.
+        */
+
+        if (restoreScroll > 0) {
+            requestAnimationFrame(() => {
+                window.scrollTo(
+                    0,
+                    restoreScroll
+                );
+            });
+        }
+
     } catch (error) {
         console.error(
             "Error searching Open Library:",
@@ -105,7 +137,7 @@ async function searchBooks(query) {
 
 
 /*
-    Display results
+    Display search results
 */
 
 function displayResults(books) {
@@ -180,8 +212,10 @@ function displayResults(books) {
 
 
 /*
-    Restore a previous search when the
-    page is opened with ?q=...
+    Restore previous search state from URL.
+
+    Example:
+    index.html?q=dune&scroll=850
 */
 
 const pageParams =
@@ -190,10 +224,16 @@ const pageParams =
 const savedQuery =
     pageParams.get("q");
 
+const savedScroll =
+    Number(pageParams.get("scroll")) || 0;
+
 if (savedQuery) {
     searchInput.value = savedQuery;
 
-    searchBooks(savedQuery);
+    searchBooks(
+        savedQuery,
+        savedScroll
+    );
 }
 
 

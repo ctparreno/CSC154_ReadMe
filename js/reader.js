@@ -38,6 +38,9 @@ const archiveId =
 const searchQuery =
     params.get("q");
 
+const scrollPosition =
+    params.get("scroll");
+
 
 let book = null;
 let rendition = null;
@@ -46,24 +49,39 @@ let rendition = null;
 /*
     Configure Back to search.
 
-    Do NOT use window.history.back().
-    Embedded readers can create their own
-    browser history entries.
+    Preserve both:
+    - query
+    - scroll position
 */
 
 if (backToSearch) {
+    const backUrl =
+        new URL(
+            "index.html",
+            window.location.href
+        );
+
     if (searchQuery) {
-        backToSearch.href =
-            `index.html?q=${encodeURIComponent(searchQuery)}`;
-    } else {
-        backToSearch.href =
-            "index.html";
+        backUrl.searchParams.set(
+            "q",
+            searchQuery
+        );
     }
+
+    if (scrollPosition) {
+        backUrl.searchParams.set(
+            "scroll",
+            scrollPosition
+        );
+    }
+
+    backToSearch.href =
+        backUrl.href;
 }
 
 
 /*
-    Start the reader
+    Start reader
 */
 
 if (!archiveId) {
@@ -595,12 +613,6 @@ function resetReader() {
     pdfViewer.classList.add("hidden");
     archiveViewer.classList.add("hidden");
     readerError.classList.add("hidden");
-
-    /*
-        Removing src is preferable to assigning
-        an empty string, which can create an
-        about:blank navigation.
-    */
 
     pdfViewer.removeAttribute("src");
     archiveViewer.removeAttribute("src");

@@ -3,11 +3,18 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
 
     <title>ReadMe Reader</title>
 
-    <link rel="stylesheet" href="css/style.css" />
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    />
 
     <!-- EPUB support -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -19,7 +26,10 @@
 
     <header class="site-header">
 
-        <a href="index.html" class="site-brand">
+        <a
+            href="index.html"
+            class="site-brand"
+        >
             ReadMe
         </a>
 
@@ -29,7 +39,11 @@
 
         <div class="reader-header">
 
-            <a href="index.html" class="back-link" id="backToSearch">
+            <a
+                href="index.html"
+                class="back-link"
+                id="backToSearch"
+            >
                 ← Back to search
             </a>
 
@@ -47,15 +61,24 @@
 
             <!-- EPUB -->
 
-            <div id="epubReader" class="reader-view hidden">
+            <div
+                id="epubReader"
+                class="reader-view hidden"
+            >
 
                 <div class="reader-controls">
 
-                    <button id="previousPage" type="button">
+                    <button
+                        id="previousPage"
+                        type="button"
+                    >
                         ← Previous
                     </button>
 
-                    <button id="nextPage" type="button">
+                    <button
+                        id="nextPage"
+                        type="button"
+                    >
                         Next →
                     </button>
 
@@ -68,19 +91,28 @@
 
             <!-- PDF -->
 
-            <iframe id="pdfViewer" class="reader-view hidden" title="PDF reader">
+            <iframe
+                id="pdfViewer"
+                class="reader-view hidden"
+                title="PDF reader">
             </iframe>
 
 
             <!-- Scanned edition -->
 
-            <iframe id="archiveViewer" class="reader-view hidden" title="Internet Archive reader" allowfullscreen>
+            <iframe
+                id="archiveViewer"
+                class="reader-view hidden"
+                title="Internet Archive reader"
+                allowfullscreen>
             </iframe>
 
 
             <!-- Messages -->
 
-            <div id="readerError" class="hidden">
+            <div
+                id="readerError"
+                class="hidden">
             </div>
 
         </section>
