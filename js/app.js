@@ -6,7 +6,7 @@ const resultsContainer = document.querySelector("#results");
 /*
     Open a selected book while preserving:
     - the current search query
-    - the current scroll position
+    - the exact book the user clicked
 */
 
 resultsContainer.addEventListener("click", (event) => {
@@ -18,12 +18,11 @@ resultsContainer.addEventListener("click", (event) => {
 
     const archiveId = button.dataset.archiveId;
     const query = searchInput.value.trim();
-    const scrollPosition = Math.round(window.scrollY);
 
     const readerUrl =
         `reader.html?id=${encodeURIComponent(archiveId)}` +
         `&q=${encodeURIComponent(query)}` +
-        `&scroll=${scrollPosition}`;
+        `&from=${encodeURIComponent(archiveId)}`;
 
     window.location.href = readerUrl;
 });
@@ -46,6 +45,11 @@ searchForm.addEventListener("submit", (event) => {
         return;
     }
 
+    /*
+        This is a brand-new search,
+        so don't restore an old book position.
+    */
+
     searchBooks(query);
 });
 
@@ -54,7 +58,7 @@ searchForm.addEventListener("submit", (event) => {
     Perform Open Library search
 */
 
-async function searchBooks(query, restoreScroll = 0) {
+async function searchBooks(query, restoreBookId = null) {
     showStatus("Searching...");
 
     /*
@@ -64,29 +68,38 @@ async function searchBooks(query, restoreScroll = 0) {
         index.html?q=dune
     */
 
-    const pageUrl = new URL(window.location.href);
+    const pageUrl =
+        new URL(window.location.href);
 
-    pageUrl.searchParams.set("q", query);
+    pageUrl.searchParams.set(
+        "q",
+        query
+    );
+
 
     /*
-        Keep scroll position only when restoring
-        an existing search.
+        If we're returning from the reader,
+        remember which result we came from.
     */
 
-    if (restoreScroll > 0) {
+    if (restoreBookId) {
         pageUrl.searchParams.set(
-            "scroll",
-            String(restoreScroll)
+            "from",
+            restoreBookId
         );
     } else {
-        pageUrl.searchParams.delete("scroll");
+        pageUrl.searchParams.delete(
+            "from"
+        );
     }
+
 
     window.history.replaceState(
         {},
         "",
         pageUrl
     );
+
 
     try {
         const searchQuery =
@@ -96,14 +109,17 @@ async function searchBooks(query, restoreScroll = 0) {
             `https://openlibrary.org/search.json?q=${encodeURIComponent(searchQuery)}&fields=key,title,author_name,cover_i,ia,ebook_access&limit=9`
         );
 
+
         if (!response.ok) {
             throw new Error(
                 "Search request failed"
             );
         }
 
+
         const data =
             await response.json();
+
 
         const readableBooks =
             data.docs.filter((book) => {
@@ -114,16 +130,20 @@ async function searchBooks(query, restoreScroll = 0) {
                 );
             });
 
-        displayResults(readableBooks);
+
+        displayResults(
+            readableBooks
+        );
+
 
         /*
-            Restore scroll only after the cards
-            and cover images have finished laying out.
+            If we're returning from a book,
+            bring that exact result back into view.
         */
 
-        if (restoreScroll > 0) {
-            await restoreScrollPosition(
-                restoreScroll
+        if (restoreBookId) {
+            restoreBookPosition(
+                restoreBookId
             );
         }
 
@@ -147,6 +167,7 @@ async function searchBooks(query, restoreScroll = 0) {
 function displayResults(books) {
     resultsContainer.innerHTML = "";
 
+
     if (books.length === 0) {
         showStatus(
             "No freely readable books found."
@@ -154,6 +175,7 @@ function displayResults(books) {
 
         return;
     }
+
 
     books.forEach((book) => {
         const bookCard =
@@ -163,17 +185,21 @@ function displayResults(books) {
             "book-card"
         );
 
+
         const title =
             book.title ||
             "Unknown title";
+
 
         const author =
             book.author_name
                 ? book.author_name.join(", ")
                 : "Unknown author";
 
+
         const archiveId =
             book.ia[0];
+
 
         const cover =
             book.cover_i
@@ -189,6 +215,7 @@ function displayResults(books) {
                         No cover available
                     </div>
                 `;
+
 
         bookCard.innerHTML = `
             <button
@@ -213,6 +240,7 @@ function displayResults(books) {
             </div>
         `;
 
+
         resultsContainer.appendChild(
             bookCard
         );
@@ -221,10 +249,11 @@ function displayResults(books) {
 
 
 /*
-    Restore search state from the URL.
+    Restore previous search state.
 
     Example:
-    index.html?q=dune&scroll=900
+
+    index.html?q=memoirs&from=cu31924022112944
 */
 
 const pageParams =
@@ -232,13 +261,13 @@ const pageParams =
         window.location.search
     );
 
+
 const savedQuery =
     pageParams.get("q");
 
-const savedScroll =
-    Number(
-        pageParams.get("scroll")
-    ) || 0;
+
+const savedBookId =
+    pageParams.get("from");
 
 
 if (savedQuery) {
@@ -247,73 +276,41 @@ if (savedQuery) {
 
     searchBooks(
         savedQuery,
-        savedScroll
+        savedBookId
     );
 }
 
 
 /*
-    Restore scroll position after result images
-    finish loading.
-
-    Without this, the browser may try to scroll
-    before the page is tall enough.
+    Return to the exact book the user opened.
 */
 
-async function restoreScrollPosition(position) {
-    const images =
-        Array.from(
-            resultsContainer.querySelectorAll("img")
+function restoreBookPosition(archiveId) {
+    const selectedBook =
+        resultsContainer.querySelector(
+            `.book-cover-button[data-archive-id="${CSS.escape(archiveId)}"]`
         );
 
-    await Promise.allSettled(
-        images.map((image) => {
-            /*
-                Image already finished loading.
-            */
 
-            if (image.complete) {
-                return Promise.resolve();
-            }
-
-
-            /*
-                Otherwise wait until it either
-                loads or fails.
-            */
-
-            return new Promise((resolve) => {
-                image.addEventListener(
-                    "load",
-                    resolve,
-                    {
-                        once: true
-                    }
-                );
-
-                image.addEventListener(
-                    "error",
-                    resolve,
-                    {
-                        once: true
-                    }
-                );
-            });
-        })
-    );
+    if (!selectedBook) {
+        return;
+    }
 
 
     /*
-        Give the browser two layout frames
-        after all the images have settled.
+        The card dimensions already exist because
+        the cover frame has a fixed aspect ratio.
+
+        Give the browser two layout frames,
+        then center the previous result.
     */
 
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            window.scrollTo(
-                0,
-                position
-            );
+            selectedBook.scrollIntoView({
+                block: "center",
+                inline: "nearest"
+            });
         });
     });
 }
@@ -333,7 +330,7 @@ function showStatus(message) {
 
 
 /*
-    Escape text inserted into HTML
+    Escape strings inserted into HTML
 */
 
 function escapeHtml(value) {
