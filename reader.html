@@ -9,7 +9,8 @@
 
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- EPUB renderer -->
+    <!-- epub.js dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
 </head>
 
@@ -32,18 +33,17 @@
             <h1 id="readerTitle">Loading book...</h1>
 
             <p id="readerStatus">
-                Finding a readable edition...
+                Finding a readable format...
             </p>
 
         </div>
 
         <section id="reader">
 
-            <!-- EPUB reader -->
+            <!-- EPUB -->
             <div id="epubReader" class="reader-view hidden">
 
                 <div class="reader-controls">
-
                     <button id="previousPage" type="button">
                         ← Previous
                     </button>
@@ -51,35 +51,21 @@
                     <button id="nextPage" type="button">
                         Next →
                     </button>
-
                 </div>
 
                 <div id="epubViewer"></div>
-
             </div>
 
-
-            <!-- PDF reader -->
+            <!-- PDF -->
             <iframe id="pdfViewer" class="reader-view hidden" title="PDF reader">
             </iframe>
-
 
             <!-- Internet Archive fallback -->
             <iframe id="archiveViewer" class="reader-view hidden" title="Internet Archive reader" allowfullscreen>
             </iframe>
 
-
-            <!-- Error state -->
-            <div id="readerError" class="hidden">
-
-                <h2>Unable to open this book</h2>
-
-                <p>
-                    ReadMe could not find a supported readable format
-                    for this item.
-                </p>
-
-            </div>
+            <!-- Error -->
+            <div id="readerError" class="hidden"></div>
 
         </section>
 
