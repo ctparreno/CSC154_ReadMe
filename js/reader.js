@@ -49,8 +49,8 @@ let rendition = null;
 /*
     Configure Back to search.
 
-    Preserve both:
-    - query
+    Preserve:
+    - search query
     - scroll position
 */
 
@@ -170,7 +170,7 @@ async function loadBook(identifier) {
 
 
         /*
-            3. Try scan
+            3. Try scanned edition
         */
 
         if (hasScan) {
@@ -181,8 +181,9 @@ async function loadBook(identifier) {
 
 
         /*
-            4. EPUB existed but couldn't
-               be displayed.
+            4. EPUB exists, but could not
+               be displayed and no fallback
+               was available.
         */
 
         if (epubFile) {
@@ -191,6 +192,10 @@ async function loadBook(identifier) {
             return;
         }
 
+
+        /*
+            5. Nothing usable found
+        */
 
         showMessage(
             "Unable to open this book",
@@ -212,7 +217,7 @@ async function loadBook(identifier) {
 
 
 /*
-    EPUB detection
+    Find EPUB file
 */
 
 function findEpub(files) {
@@ -232,7 +237,7 @@ function findEpub(files) {
 
 
 /*
-    PDF detection
+    Find PDF file
 */
 
 function findPdf(files) {
@@ -256,6 +261,11 @@ function findPdf(files) {
     }
 
 
+    /*
+        Prefer a normal PDF over text-only
+        or black-and-white derivatives.
+    */
+
     const preferredPdf =
         pdfFiles.find((file) => {
             const name =
@@ -274,7 +284,7 @@ function findPdf(files) {
 
 
 /*
-    Scan detection
+    Detect scanned-book files
 */
 
 function detectScan(files) {
@@ -297,7 +307,7 @@ function detectScan(files) {
 
 
 /*
-    EPUB
+    EPUB reader
 */
 
 async function tryEpub(identifier, filename) {
@@ -309,39 +319,20 @@ async function tryEpub(identifier, filename) {
     const epubUrl =
         `https://archive.org/cors/${encodeURIComponent(identifier)}/${encodeURIComponent(filename)}`;
 
-
-    let runtimeFailed = false;
-
-
-    const handleRuntimeError = (event) => {
-        const source =
-            event?.filename || "";
-
-        const message =
-            String(event?.message || "");
-
-
-        if (
-            source.includes("epub") ||
-            message.toLowerCase().includes("epub") ||
-            message.includes("indexOf")
-        ) {
-            runtimeFailed = true;
-        }
-    };
-
-
-    window.addEventListener(
-        "error",
-        handleRuntimeError
-    );
-
-
     try {
         book =
             ePub(epubUrl);
 
-        await book.ready;
+
+        /*
+            Don't allow EPUB initialization
+            to hang indefinitely.
+        */
+
+        await Promise.race([
+            book.ready,
+            timeout(5000)
+        ]);
 
 
         rendition =
@@ -354,17 +345,23 @@ async function tryEpub(identifier, filename) {
             );
 
 
-        await rendition.display();
+        /*
+            epub.js can sometimes fail internally
+            without cleanly rejecting display().
 
-        await wait(1200);
+            Give it a maximum of five seconds.
+        */
+
+        await Promise.race([
+            rendition.display(),
+            timeout(5000)
+        ]);
 
 
-        if (runtimeFailed) {
-            throw new Error(
-                "EPUB runtime error."
-            );
-        }
-
+        /*
+            Confirm epub.js actually created
+            a reader iframe.
+        */
 
         const renderedIframe =
             epubViewer.querySelector("iframe");
@@ -372,7 +369,7 @@ async function tryEpub(identifier, filename) {
 
         if (!renderedIframe) {
             throw new Error(
-                "EPUB did not render."
+                "EPUB did not create a reader."
             );
         }
 
@@ -382,6 +379,10 @@ async function tryEpub(identifier, filename) {
         readerStatus.textContent =
             "EPUB";
 
+
+        /*
+            EPUB page controls
+        */
 
         previousPageButton.onclick = () => {
             if (rendition) {
@@ -396,6 +397,10 @@ async function tryEpub(identifier, filename) {
             }
         };
 
+
+        /*
+            Arrow-key navigation
+        */
 
         document.removeEventListener(
             "keydown",
@@ -420,18 +425,12 @@ async function tryEpub(identifier, filename) {
         cleanupEpub();
 
         return false;
-
-    } finally {
-        window.removeEventListener(
-            "error",
-            handleRuntimeError
-        );
     }
 }
 
 
 /*
-    PDF
+    PDF reader
 */
 
 async function tryPdf(identifier, filename) {
@@ -481,6 +480,10 @@ async function tryPdf(identifier, filename) {
 
             cleanup();
 
+            console.error(
+                "PDF failed to load."
+            );
+
             resolve(false);
         };
 
@@ -488,6 +491,13 @@ async function tryPdf(identifier, filename) {
         pdfViewer.src =
             pdfUrl;
 
+
+        /*
+            Some browsers don't reliably fire
+            iframe errors for PDFs.
+
+            Give the load five seconds.
+        */
 
         setTimeout(() => {
             if (settled) {
@@ -506,7 +516,7 @@ async function tryPdf(identifier, filename) {
 
 
 /*
-    Scan / BookReader
+    Internet Archive BookReader
 */
 
 function loadArchiveReader(identifier) {
@@ -523,7 +533,7 @@ function loadArchiveReader(identifier) {
 
 
 /*
-    EPUB keyboard navigation
+    EPUB keyboard controls
 */
 
 function handleKeyboardNavigation(event) {
@@ -542,12 +552,24 @@ function handleKeyboardNavigation(event) {
 
 
 /*
-    Clean up EPUB
+    Clean up EPUB state
 */
 
 function cleanupEpub() {
+    document.removeEventListener(
+        "keydown",
+        handleKeyboardNavigation
+    );
+
     if (book) {
-        book.destroy();
+        try {
+            book.destroy();
+        } catch (error) {
+            console.warn(
+                "EPUB cleanup warning:",
+                error
+            );
+        }
     }
 
     book = null;
@@ -560,7 +582,7 @@ function cleanupEpub() {
 
 
 /*
-    EPUB unavailable
+    EPUB unavailable message
 */
 
 function showEpubMessage() {
@@ -603,7 +625,7 @@ function showMessage(title, message) {
 
 
 /*
-    Reset reader
+    Reset reader UI
 */
 
 function resetReader() {
@@ -614,6 +636,11 @@ function resetReader() {
     archiveViewer.classList.add("hidden");
     readerError.classList.add("hidden");
 
+    /*
+        Remove iframe sources rather than
+        navigating them to about:blank.
+    */
+
     pdfViewer.removeAttribute("src");
     archiveViewer.removeAttribute("src");
 
@@ -622,12 +649,18 @@ function resetReader() {
 
 
 /*
-    Small delay helper
+    Reject after a specified amount of time
 */
 
-function wait(milliseconds) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, milliseconds);
+function timeout(milliseconds) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            reject(
+                new Error(
+                    "Reader timed out."
+                )
+            );
+        }, milliseconds);
     });
 }
 
