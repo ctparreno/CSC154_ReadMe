@@ -39,7 +39,10 @@ searchForm.addEventListener("submit", (event) => {
     const query = searchInput.value.trim();
 
     if (!query) {
-        showStatus("Enter a title, author, or subject to search.");
+        showStatus(
+            "Enter a title, author, or subject to search."
+        );
+
         return;
     }
 
@@ -55,7 +58,7 @@ async function searchBooks(query, restoreScroll = 0) {
     showStatus("Searching...");
 
     /*
-        Store the search in the page URL.
+        Store the current search in the URL.
 
         Example:
         index.html?q=dune
@@ -66,8 +69,8 @@ async function searchBooks(query, restoreScroll = 0) {
     pageUrl.searchParams.set("q", query);
 
     /*
-        Remove an old scroll value when the user
-        starts a fresh search manually.
+        Keep scroll position only when restoring
+        an existing search.
     */
 
     if (restoreScroll > 0) {
@@ -94,33 +97,34 @@ async function searchBooks(query, restoreScroll = 0) {
         );
 
         if (!response.ok) {
-            throw new Error("Search request failed");
+            throw new Error(
+                "Search request failed"
+            );
         }
 
-        const data = await response.json();
+        const data =
+            await response.json();
 
-        const readableBooks = data.docs.filter((book) => {
-            return (
-                book.ebook_access === "public" &&
-                Array.isArray(book.ia) &&
-                book.ia.length > 0
-            );
-        });
+        const readableBooks =
+            data.docs.filter((book) => {
+                return (
+                    book.ebook_access === "public" &&
+                    Array.isArray(book.ia) &&
+                    book.ia.length > 0
+                );
+            });
 
         displayResults(readableBooks);
 
         /*
-            Restore the previous scroll position
-            after the results are back in the DOM.
+            Restore scroll only after the cards
+            and cover images have finished laying out.
         */
 
         if (restoreScroll > 0) {
-            requestAnimationFrame(() => {
-                window.scrollTo(
-                    0,
-                    restoreScroll
-                );
-            });
+            await restoreScrollPosition(
+                restoreScroll
+            );
         }
 
     } catch (error) {
@@ -155,10 +159,13 @@ function displayResults(books) {
         const bookCard =
             document.createElement("article");
 
-        bookCard.classList.add("book-card");
+        bookCard.classList.add(
+            "book-card"
+        );
 
         const title =
-            book.title || "Unknown title";
+            book.title ||
+            "Unknown title";
 
         const author =
             book.author_name
@@ -206,34 +213,109 @@ function displayResults(books) {
             </div>
         `;
 
-        resultsContainer.appendChild(bookCard);
+        resultsContainer.appendChild(
+            bookCard
+        );
     });
 }
 
 
 /*
-    Restore previous search state from URL.
+    Restore search state from the URL.
 
     Example:
-    index.html?q=dune&scroll=850
+    index.html?q=dune&scroll=900
 */
 
 const pageParams =
-    new URLSearchParams(window.location.search);
+    new URLSearchParams(
+        window.location.search
+    );
 
 const savedQuery =
     pageParams.get("q");
 
 const savedScroll =
-    Number(pageParams.get("scroll")) || 0;
+    Number(
+        pageParams.get("scroll")
+    ) || 0;
+
 
 if (savedQuery) {
-    searchInput.value = savedQuery;
+    searchInput.value =
+        savedQuery;
 
     searchBooks(
         savedQuery,
         savedScroll
     );
+}
+
+
+/*
+    Restore scroll position after result images
+    finish loading.
+
+    Without this, the browser may try to scroll
+    before the page is tall enough.
+*/
+
+async function restoreScrollPosition(position) {
+    const images =
+        Array.from(
+            resultsContainer.querySelectorAll("img")
+        );
+
+    await Promise.allSettled(
+        images.map((image) => {
+            /*
+                Image already finished loading.
+            */
+
+            if (image.complete) {
+                return Promise.resolve();
+            }
+
+
+            /*
+                Otherwise wait until it either
+                loads or fails.
+            */
+
+            return new Promise((resolve) => {
+                image.addEventListener(
+                    "load",
+                    resolve,
+                    {
+                        once: true
+                    }
+                );
+
+                image.addEventListener(
+                    "error",
+                    resolve,
+                    {
+                        once: true
+                    }
+                );
+            });
+        })
+    );
+
+
+    /*
+        Give the browser two layout frames
+        after all the images have settled.
+    */
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.scrollTo(
+                0,
+                position
+            );
+        });
+    });
 }
 
 
@@ -251,7 +333,7 @@ function showStatus(message) {
 
 
 /*
-    HTML escaping
+    Escape text inserted into HTML
 */
 
 function escapeHtml(value) {
