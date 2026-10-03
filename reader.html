@@ -11,26 +11,31 @@
 
     <!-- EPUB support -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
 </head>
 
 <body>
 
     <header class="site-header">
+
         <a href="index.html" class="site-brand">
             ReadMe
         </a>
+
     </header>
 
     <main class="reader-page">
 
         <div class="reader-header">
 
-            <a href="#" class="back-link" id="backToSearch">
+            <a href="index.html" class="back-link" id="backToSearch">
                 ← Back to search
             </a>
 
-            <h1 id="readerTitle">Loading book...</h1>
+            <h1 id="readerTitle">
+                Loading book...
+            </h1>
 
             <p id="readerStatus">
                 Finding a readable format...
@@ -41,9 +46,11 @@
         <section id="reader">
 
             <!-- EPUB -->
+
             <div id="epubReader" class="reader-view hidden">
 
                 <div class="reader-controls">
+
                     <button id="previousPage" type="button">
                         ← Previous
                     </button>
@@ -51,21 +58,30 @@
                     <button id="nextPage" type="button">
                         Next →
                     </button>
+
                 </div>
 
                 <div id="epubViewer"></div>
+
             </div>
 
+
             <!-- PDF -->
+
             <iframe id="pdfViewer" class="reader-view hidden" title="PDF reader">
             </iframe>
 
-            <!-- Internet Archive scan reader -->
+
+            <!-- Scanned edition -->
+
             <iframe id="archiveViewer" class="reader-view hidden" title="Internet Archive reader" allowfullscreen>
             </iframe>
 
-            <!-- Messages / errors -->
-            <div id="readerError" class="hidden"></div>
+
+            <!-- Messages -->
+
+            <div id="readerError" class="hidden">
+            </div>
 
         </section>
 
