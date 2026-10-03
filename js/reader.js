@@ -12,11 +12,33 @@ const readerError = document.querySelector("#readerError");
 const previousPageButton = document.querySelector("#previousPage");
 const nextPageButton = document.querySelector("#nextPage");
 
+const backToSearch = document.querySelector("#backToSearch");
+
 const params = new URLSearchParams(window.location.search);
 const archiveId = params.get("id");
 
 let book = null;
 let rendition = null;
+
+
+/*
+    Back to previous search page
+*/
+
+backToSearch.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        window.location.href = "index.html";
+    }
+});
+
+
+/*
+    Start reader
+*/
 
 if (!archiveId) {
     showMessage(
@@ -26,6 +48,11 @@ if (!archiveId) {
 } else {
     loadBook(archiveId);
 }
+
+
+/*
+    Load Internet Archive metadata
+*/
 
 async function loadBook(identifier) {
     resetReader();
@@ -52,9 +79,11 @@ async function loadBook(identifier) {
         const pdfFile = findPdf(files);
         const hasScan = detectScan(files);
 
+
         /*
             1. Try EPUB first.
         */
+
         if (epubFile) {
             const epubWorked = await tryEpub(
                 identifier,
@@ -66,10 +95,11 @@ async function loadBook(identifier) {
             }
         }
 
+
         /*
-            2. If EPUB fails or doesn't exist,
-               try PDF.
+            2. Try PDF.
         */
+
         if (pdfFile) {
             const pdfWorked = await tryPdf(
                 identifier,
@@ -81,24 +111,26 @@ async function loadBook(identifier) {
             }
         }
 
+
         /*
-            3. If a scan exists, use Internet Archive
-               BookReader.
+            3. Try Internet Archive BookReader.
         */
+
         if (hasScan) {
             loadArchiveReader(identifier);
             return;
         }
 
+
         /*
-            4. If the item had an EPUB but we could not
-               load it and there was no usable fallback,
-               show a friendly message.
+            EPUB exists, but could not be rendered.
         */
+
         if (epubFile) {
             showEpubMessage();
             return;
         }
+
 
         showMessage(
             "Unable to open this book",
@@ -115,6 +147,11 @@ async function loadBook(identifier) {
     }
 }
 
+
+/*
+    Locate EPUB
+*/
+
 function findEpub(files) {
     return files.find((file) => {
         const name = (file.name || "").toLowerCase();
@@ -126,6 +163,11 @@ function findEpub(files) {
         );
     }) || null;
 }
+
+
+/*
+    Locate PDF
+*/
 
 function findPdf(files) {
     const pdfFiles = files.filter((file) => {
@@ -155,6 +197,11 @@ function findPdf(files) {
     return preferredPdf || pdfFiles[0];
 }
 
+
+/*
+    Detect scanned-book files
+*/
+
 function detectScan(files) {
     return files.some((file) => {
         const name = (file.name || "").toLowerCase();
@@ -169,6 +216,11 @@ function detectScan(files) {
         );
     });
 }
+
+
+/*
+    EPUB reader
+*/
 
 async function tryEpub(identifier, filename) {
     resetReader();
@@ -229,6 +281,11 @@ async function tryEpub(identifier, filename) {
     }
 }
 
+
+/*
+    PDF reader
+*/
+
 async function tryPdf(identifier, filename) {
     resetReader();
 
@@ -287,6 +344,11 @@ async function tryPdf(identifier, filename) {
     });
 }
 
+
+/*
+    Internet Archive BookReader
+*/
+
 function loadArchiveReader(identifier) {
     resetReader();
 
@@ -297,6 +359,11 @@ function loadArchiveReader(identifier) {
 
     archiveViewer.classList.remove("hidden");
 }
+
+
+/*
+    EPUB keyboard navigation
+*/
 
 function handleKeyboardNavigation(event) {
     if (!rendition) {
@@ -312,6 +379,11 @@ function handleKeyboardNavigation(event) {
     }
 }
 
+
+/*
+    Clean up EPUB state
+*/
+
 function cleanupEpub() {
     if (book) {
         book.destroy();
@@ -323,6 +395,11 @@ function cleanupEpub() {
     epubViewer.innerHTML = "";
 }
 
+
+/*
+    EPUB unavailable message
+*/
+
 function showEpubMessage() {
     resetReader();
 
@@ -330,6 +407,7 @@ function showEpubMessage() {
 
     readerError.innerHTML = `
         <h2>EPUB support is coming soon.</h2>
+
         <p>
             This book is available in EPUB format,
             but it can't be opened in ReadMe yet.
@@ -338,6 +416,11 @@ function showEpubMessage() {
 
     readerError.classList.remove("hidden");
 }
+
+
+/*
+    General message
+*/
 
 function showMessage(title, message) {
     resetReader();
@@ -352,6 +435,11 @@ function showMessage(title, message) {
     readerError.classList.remove("hidden");
 }
 
+
+/*
+    Reset reader UI
+*/
+
 function resetReader() {
     cleanupEpub();
 
@@ -365,6 +453,11 @@ function resetReader() {
 
     readerError.innerHTML = "";
 }
+
+
+/*
+    Escape text inserted into HTML
+*/
 
 function escapeHtml(value) {
     return String(value)

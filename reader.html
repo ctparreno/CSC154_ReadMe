@@ -9,7 +9,7 @@
 
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- epub.js dependencies -->
+    <!-- EPUB support -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
 </head>
@@ -26,7 +26,7 @@
 
         <div class="reader-header">
 
-            <a href="index.html" class="back-link">
+            <a href="#" class="back-link" id="backToSearch">
                 ← Back to search
             </a>
 
@@ -57,21 +57,14 @@
             </div>
 
             <!-- PDF -->
-            <iframe
-                id="pdfViewer"
-                class="reader-view hidden"
-                title="PDF reader">
+            <iframe id="pdfViewer" class="reader-view hidden" title="PDF reader">
             </iframe>
 
-            <!-- Internet Archive fallback -->
-            <iframe
-                id="archiveViewer"
-                class="reader-view hidden"
-                title="Internet Archive reader"
-                allowfullscreen>
+            <!-- Internet Archive scan reader -->
+            <iframe id="archiveViewer" class="reader-view hidden" title="Internet Archive reader" allowfullscreen>
             </iframe>
 
-            <!-- Error -->
+            <!-- Messages / errors -->
             <div id="readerError" class="hidden"></div>
 
         </section>
