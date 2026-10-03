@@ -17,29 +17,51 @@
     </header>
 
     <main class="page-shell">
+
         <section class="hero">
 
             <h1>Find something to read.</h1>
 
             <form class="search-form">
+
                 <input type="text" id="searchInput" name="query" placeholder="Search by title, author, or subject..."
                     aria-label="Search for books" />
 
                 <button type="submit">
                     Search
                 </button>
+
             </form>
 
             <p class="subtitle">
                 Search freely available books and read them directly in your browser.
             </p>
 
-            <section id="results" class="results-grid" aria-live="polite"></section>
+            <section id="results" class="results-grid" aria-live="polite">
+            </section>
+
+            <nav id="pagination" class="pagination hidden" aria-label="Search result pages">
+
+                <button id="previousPageButton" type="button">
+                    ← Previous
+                </button>
+
+                <span id="pageIndicator">
+                    Page 1
+                </span>
+
+                <button id="nextPageButton" type="button">
+                    Next →
+                </button>
+
+            </nav>
 
         </section>
+
     </main>
 
     <script src="js/app.js"></script>
+
 </body>
 
 </html>
