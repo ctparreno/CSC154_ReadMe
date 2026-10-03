@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>ReadMe Reader</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- EPUB renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+</head>
+
+<body>
+
+    <header class="site-header">
+        <a href="index.html" class="site-brand">
+            ReadMe
+        </a>
+    </header>
+
+    <main class="reader-page">
+
+        <div class="reader-header">
+
+            <a href="index.html" class="back-link">
+                ← Back to search
+            </a>
+
+            <h1 id="readerTitle">Loading book...</h1>
+
+            <p id="readerStatus">
+                Finding a readable edition...
+            </p>
+
+        </div>
+
+        <section id="reader">
+
+            <!-- EPUB reader -->
+            <div id="epubReader" class="reader-view hidden">
+
+                <div class="reader-controls">
+
+                    <button id="previousPage" type="button">
+                        ← Previous
+                    </button>
+
+                    <button id="nextPage" type="button">
+                        Next →
+                    </button>
+
+                </div>
+
+                <div id="epubViewer"></div>
+
+            </div>
+
+
+            <!-- PDF reader -->
+            <iframe id="pdfViewer" class="reader-view hidden" title="PDF reader">
+            </iframe>
+
+
+            <!-- Internet Archive fallback -->
+            <iframe id="archiveViewer" class="reader-view hidden" title="Internet Archive reader" allowfullscreen>
+            </iframe>
+
+
+            <!-- Error state -->
+            <div id="readerError" class="hidden">
+
+                <h2>Unable to open this book</h2>
+
+                <p>
+                    ReadMe could not find a supported readable format
+                    for this item.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="js/reader.js"></script>
+
+</body>
+
+</html>
